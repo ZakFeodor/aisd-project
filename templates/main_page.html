@@ -6,5 +6,20 @@
 </head>
 <body>
 <h1>Добро пожаловать {{name}}</h1>
+<form action="http://127.0.0.1:8000/main_page/{name}/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file">
+    <button type="submit">Загрузить другой файл</button>
+</form>
+<form action="http://127.0.0.1:8000/main_page/{name}/get_hashmap" method="post" enctype="multipart/form-data">
+    <input type="file" name="file">
+    <button type="submit">Получить информацию по HashMap</button>
+</form>
+<form action="http://127.0.0.1:8000/main_page/{name}/get_segment_tree" method="post" enctype="multipart/form-data">
+    <input type="file" name="file">
+    <button type="submit">Получить информацию по Segment_tree</button>
+</form>
+<form action="http://127.0.0.1:8000/">
+    <button type="submit">Выйти из аккаунта</button>
+</form>
 </body>
 </html>
