@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+{% if result %}
+    <p style="color: blue">{{ result }}</p>
+{% endif %}
+<h1>Segment Tree</h1>
+<h2>Пример на массиве [1, 5, 3, 9, 11, 6]</h2>
+<form action="/main_page/get_segment_tree/get_result/{{ left }}/{{ right }}" method="get">
+    <label>Левая граница суммы</label><input type="number" name="left" required>
+    <label>Правая граница суммы</label><input type="number" name="right" required>
+    <button type="submit">Отправить</button>
+</form>
+<form action="http://127.0.0.1:8000/main_page">
+    <input type="submit" value="Назад">
+</form>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h1>Smooth Sort</h1>
+{% if result %}
+    <p style="color: blue">{{ result }}</p>
+{% endif %}
+<h2>Введите 5 чисел, формирующих массив для сортировки</h2>
+<form action="http://127.0.0.1:8000/main_page/smoothsort/get_result" method="post">
+    <input type="number" name="numbers" required>
+    <input type="number" name="numbers" required>
+    <input type="number" name="numbers" required>
+    <input type="number" name="numbers" required>
+    <input type="number" name="numbers" required>
+    <button type="submit">Отправить</button>
+</form>
+<form action="http://127.0.0.1:8000/main_page">
+    <input type="submit" value="Назад">
+</form>
+</body>
+</html>

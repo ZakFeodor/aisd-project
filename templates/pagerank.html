@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<img src="https://avatars.dzeninfra.ru/get-zen_doc/271828/pub_66ad0bb4dd98fa03adbc0bfa_66ad0e44a328f35f90208f63/scale_1200" alt="Граф" width="300">
+<h2>Результат для этого графа</h2>
+{% for node, rank in result.items() %}
+    <tr>
+        <li><td>{{ node }}</td>
+        <td>{{ "%.2f" | format(rank) }}</td></li>
+    </tr>
+{% endfor %}
+<form action="http://127.0.0.1:8000/main_page">
+    <input type="submit" value="Назад">
+</form>
+</body>
+</html>

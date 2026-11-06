@@ -5,16 +5,27 @@
     <title>Title</title>
 </head>
 <body>
-<h1>Добро пожаловать {{name}}</h1>
-<form action="http://127.0.0.1:8000/main_page/{{name}}/upload" method="post" enctype="multipart/form-data">
+<h1>Добро пожаловать</h1>
+{% if error %}
+    <p style="color: red">{{ error }}</p>
+{% endif %}
+<form action="http://127.0.0.1:8000/main_page/upload" method="post" enctype="multipart/form-data">
     <input type="file" name="file">
     <button type="submit">Отправить файл</button>
 </form>
-<form action="http://127.0.0.1:8000/main_page/{{name}}/get_hashmap">
+<form action="http://127.0.0.1:8000/main_page/get_hashmap">
     <button type="submit">Получить информацию по HashMap</button>
 </form>
-<form action="http://127.0.0.1:8000/main_page/{{name}}/get_segment_tree">
+<form action="http://127.0.0.1:8000/main_page/get_segment_tree">
     <button type="submit">Получить информацию по Segment_tree</button>
+</form>
+</form>
+<form action="http://127.0.0.1:8000/main_page/PageRank">
+    <button type="submit">Получить информацию по PageRank</button>
+</form>
+</form>
+<form action="http://127.0.0.1:8000/main_page/smoothsort">
+    <button type="submit">Получить информацию по Leonardo Heap</button>
 </form>
 <form action="http://127.0.0.1:8000/">
     <button type="submit">Выйти из аккаунта</button>

@@ -1,30 +1,17 @@
+
 from fastapi import FastAPI, Request, Depends, UploadFile, Form, File
 import os
-import uuid
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel, Field
-from model import User, engine, SessionLocal
-from sqlalchemy.orm import Session
-from sqlalchemy import select
-import hashlib
-from typing import Optional
+from typing import List
+from auth import check_credentials, login_user, get_session, logout_user, check_password, require_user, Session, create_session
+from hashmap import get_row, build_hash_index
+from segment_tree import SegmentTree
+from pagerank import pagerank
+from smoothsort import smooth_sort
 
-
-def get_session():
-    with SessionLocal() as session:
-        yield session
-
-
-def get_hash(password: str) -> str:
-    return hashlib.sha256(password.encode('utf-8')).hexdigest()
-
-
-class UserModel(BaseModel):
-    name: str = Field(min_length=1, max_length=30)
-    login: str = Field(min_length=1, max_length=20)
-    password: str = Field(min_length=8, max_length=30)
-
+HASHCACHE = {}
+PAGERANKCACHE = {}
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -35,81 +22,170 @@ def root(request: Request):
     return templates.TemplateResponse(request=request, name='auth.html')
 
 
-@app.post("/auth_check")
-def auth_check(
-        request: Request,
-        login: str = Form(...),
-        password: str = Form(...),
-        session: Session = Depends(get_session)
-):
-    user = session.scalar(select(User).where(User.login == login).limit(1))
-    if not user or user.password != get_hash(password):
-        return templates.TemplateResponse(request=request, name='auth_error.html')
-
-    return RedirectResponse(url=f"/main_page/{user.name}", status_code=303)
-
 
 @app.get("/register", response_class=HTMLResponse)
 def register_page(request: Request):
     return templates.TemplateResponse(request=request, name='register.html')
 
-
-@app.post("/register")
-def register_user(
+@app.post("/auth_check", response_class=HTMLResponse)
+def auth_page(
         request: Request,
-        name: str = Form(...),
         login: str = Form(...),
         password: str = Form(...),
         session: Session = Depends(get_session)
 ):
-    new_user = User(name=name, login=login, password=get_hash(password))
-    session.add(new_user)
-    session.commit()
-    return RedirectResponse(url=f"/main_page/{new_user.name}", status_code=303)
+    response = RedirectResponse(url=f"/main_page", status_code=303)
+    create_session(response, login)
+    if check_password(login, password, session):
+        return response
 
+    return templates.TemplateResponse(request=request, name='auth.html', context={"error": 'Ошибка пароля или логина'})
+
+@app.post("/register")
+def register_user(
+        request: Request,
+        login: str = Form(...),
+        password: str = Form(...),
+        session: Session = Depends(get_session)
+):
+    if check_credentials(login, session):
+        error = 'Пользователь с этим логином уже существует'
+        return templates.TemplateResponse(request=request, name='register.html', context={"error": error})
+    response = RedirectResponse(url=f"/main_page", status_code=303)
+    create_session(response, login)
+    login_user(login, password, session)
+    return response
 
 @app.get("/main_page", response_class=HTMLResponse)
-@app.get("/main_page/{name}", response_class=HTMLResponse)
-def main_page(request: Request, name: Optional[str] = None):
-    if name is None:
-        name = "Гость"
+def main_page(request: Request):
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+    error = request.query_params.get("error")
     return templates.TemplateResponse(
         request=request,
         name='main_page.html',
-        context={'name': name}
+        context={"error": error}
     )
 
 
-@app.post("/main_page/{name}/upload")
-def upload_file(name: str, file: UploadFile = File(...)):
-    user_dir = os.path.join("uploads", name)
+@app.post("/main_page/upload")
+def upload_file(request: Request, file: UploadFile = File(...)):
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+    user_dir = os.path.join("uploads", user)
     os.makedirs(user_dir, exist_ok=True)
     file_path = os.path.join(user_dir, file.filename)
     with open(file_path, "wb") as f:
         f.write(file.file.read())
 
-    return RedirectResponse(url=f"/main_page/{name}", status_code=303)
+    return RedirectResponse(url=f"/main_page", status_code=303)
 
+@app.get("/main_page/get_hashmap/get_row", response_class=HTMLResponse)
+def hashmap_result(request: Request, transaction_id: str | None = None):
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+    row = get_row(f"uploads/{user}/Retail_Transactions_Dataset.csv", int(transaction_id), HASHCACHE.get(user, None))
+    if row is None:
+        return RedirectResponse(url=f"/main_page?error=Запрашиваемая транзакция не найдена", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name='hashmap.html',
+        context={"result": row}
+    )
 
-@app.get("/main_page/{name}/get_hashmap", response_class=HTMLResponse)
-def hashmap(request: Request, name: str):
-    if os.path.exists(f"uploads/{name}/olympics_history_1896_2024_FullSchema.csv"):
+@app.get("/main_page/get_hashmap", response_class=HTMLResponse)
+def hashmap(request: Request):
+    user = require_user(request)
+    if os.path.exists(f"uploads/{user}/Retail_Transactions_Dataset.csv"):
+        hashmap = build_hash_index(f"uploads/{user}/Retail_Transactions_Dataset.csv")
+        HASHCACHE[user] = hashmap
         return templates.TemplateResponse(
             request=request,
-            name='hashmap.html',
-            context={'name': name}
+            name='hashmap.html'
         )
 
-    return RedirectResponse(url=f"/main_page/{name}", status_code=303)
+    return RedirectResponse(url=f"/main_page?error=Не внесен необходимый файл retail_transactions", status_code=303)
+
+@app.get("/main_page/get_segment_tree/get_result", response_class=HTMLResponse)
+def segment_tree(request: Request, left: int = 0, right: int = 0):
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    result = PAGERANKCACHE[user].query(left, right)
+
+    return templates.TemplateResponse(
+        request=request,
+        name='segmenttree.html',
+        context={"result": result}
+    )
 
 
-@app.get("/main_page/{name}/get_segment_tree", response_class=HTMLResponse)
-def segment_tree(request: Request, name: str):
-    if os.path.exists(f"uploads/{name}/olympics_history_1896_2024_FullSchema.csv"):
+@app.get("/main_page/get_segment_tree", response_class=HTMLResponse)
+def segment_tree(request: Request):
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    tree = SegmentTree([1, 5, 3, 9, 11, 6])
+    PAGERANKCACHE[user] = tree
+    if tree:
         return templates.TemplateResponse(
             request=request,
-            name='segment_tree.html',
-            context={'name': name}
+            name='segmenttree.html'
         )
 
-    return RedirectResponse(url=f"/main_page/{name}", status_code=303)
+    return RedirectResponse(url=f"/main_page?error=Неизвестная ошибка", status_code=303)
+
+@app.get("/main_page/PageRank/get_result", response_class=HTMLResponse)
+def page_rank(request: Request):
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    return templates.TemplateResponse(
+        request=request,
+        name='segmenttree.html'
+    )
+
+@app.get("/main_page/PageRank", response_class=HTMLResponse)
+def page_rank(request: Request):
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    result = pagerank()
+
+    return templates.TemplateResponse(
+        request=request,
+        name='pagerank.html',
+        context={"result": result}
+    )
+
+@app.get("/main_page/smoothsort", response_class=HTMLResponse)
+def smoot_sort(request: Request):
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    return templates.TemplateResponse(
+        request=request,
+        name='smoothsort.html'
+    )
+
+@app.post("/main_page/smoothsort/get_result", response_class=HTMLResponse)
+def leonardo_heap_smooth_sort(request: Request, numbers: List[int] = Form(...)):
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    result = smooth_sort(numbers)
+
+    return templates.TemplateResponse(
+        request=request,
+        name='smoothsort.html',
+        context={"result": result}
+    )
