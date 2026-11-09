@@ -1,6 +1,7 @@
-
 from fastapi import FastAPI, Request, Depends, UploadFile, Form, File
+from fastapi.staticfiles import StaticFiles
 import os
+from typing import Annotated
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from typing import List
@@ -11,10 +12,12 @@ from pagerank import pagerank
 from smoothsort import smooth_sort
 
 HASHCACHE = {}
-PAGERANKCACHE = {}
+STCACHE = {}
+DEFAULT_ARRAY = [1, 5, 3, 9, 11, 6]
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -30,13 +33,13 @@ def register_page(request: Request):
 @app.post("/auth_check", response_class=HTMLResponse)
 def auth_page(
         request: Request,
-        login: str = Form(...),
-        password: str = Form(...),
+        login: Annotated[str, Form()] = '',
+        password: Annotated[str, Form()] = '',
         session: Session = Depends(get_session)
 ):
     response = RedirectResponse(url=f"/main_page", status_code=303)
-    create_session(response, login)
     if check_password(login, password, session):
+        create_session(response, login)
         return response
 
     return templates.TemplateResponse(request=request, name='auth.html', context={"error": 'Ошибка пароля или логина'})
@@ -44,8 +47,8 @@ def auth_page(
 @app.post("/register")
 def register_user(
         request: Request,
-        login: str = Form(...),
-        password: str = Form(...),
+        login: Annotated[str, Form()] = '',
+        password: Annotated[str, Form()] = '',
         session: Session = Depends(get_session)
 ):
     if check_credentials(login, session):
@@ -110,35 +113,65 @@ def hashmap(request: Request):
     return RedirectResponse(url=f"/main_page?error=Не внесен необходимый файл retail_transactions", status_code=303)
 
 @app.get("/main_page/get_segment_tree/get_result", response_class=HTMLResponse)
-def segment_tree(request: Request, left: int = 0, right: int = 0):
+def segment_tree_result(request: Request, left: int = 0, right: int = 0):
     user = require_user(request)
     if isinstance(user, RedirectResponse):
         return user
 
-    result = PAGERANKCACHE[user].query(left, right)
+    tree = STCACHE.get(user)
+    if tree is None:
+        return RedirectResponse(url=f"/main_page?error=Сначала создайте дерево", status_code=303)
+
+    result = tree.query(left, right)
 
     return templates.TemplateResponse(
         request=request,
         name='segmenttree.html',
-        context={"result": result}
+        context={"result": result, "array": tree.array}
     )
 
 
 @app.get("/main_page/get_segment_tree", response_class=HTMLResponse)
-def segment_tree(request: Request):
+def segment_tree_page(request: Request):
     user = require_user(request)
     if isinstance(user, RedirectResponse):
         return user
 
-    tree = SegmentTree([1, 5, 3, 9, 11, 6])
-    PAGERANKCACHE[user] = tree
-    if tree:
-        return templates.TemplateResponse(
-            request=request,
-            name='segmenttree.html'
+    tree = STCACHE.get(user)
+    if tree is None:
+        tree = SegmentTree(DEFAULT_ARRAY)
+        STCACHE[user] = tree
+
+    return templates.TemplateResponse(
+        request=request,
+        name='segmenttree.html',
+        context={"array": tree.array}
+    )
+
+
+@app.post("/main_page/get_segment_tree", response_class=HTMLResponse)
+def segment_tree_set_array(request: Request, array_input: Annotated[str, Form()] = ''):
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    try:
+        arr = [int(x.strip()) for x in array_input.split(',') if x.strip()]
+        if not arr:
+            raise ValueError
+        tree = SegmentTree(arr)
+        STCACHE[user] = tree
+    except ValueError:
+        return RedirectResponse(
+            url=f"/main_page?error=Неверный формат массива",
+            status_code=303
         )
 
-    return RedirectResponse(url=f"/main_page?error=Неизвестная ошибка", status_code=303)
+    return templates.TemplateResponse(
+        request=request,
+        name='segmenttree.html',
+        context={"array": arr}
+    )
 
 @app.get("/main_page/PageRank/get_result", response_class=HTMLResponse)
 def page_rank(request: Request):
@@ -177,7 +210,7 @@ def smoot_sort(request: Request):
     )
 
 @app.post("/main_page/smoothsort/get_result", response_class=HTMLResponse)
-def leonardo_heap_smooth_sort(request: Request, numbers: List[int] = Form(...)):
+def leonardo_heap_smooth_sort(request: Request, numbers: Annotated[List[int], Form()] = None):
     user = require_user(request)
     if isinstance(user, RedirectResponse):
         return user

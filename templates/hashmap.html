@@ -1,18 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>HashMap</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+<div class="container">
+<h1>HashMap</h1>
 {% if result %}
-    <p style="color: blue">{{ result }}</p>
+    <div class="result-box">{{ result }}</div>
 {% endif %}
-<form action="/main_page/get_hashmap/get_row/{{ transaction_id }}" method="get">
-    <label>Введите номер транзакции</label><input type="text" name="transaction_id" required>
+<form action="/main_page/get_hashmap/get_row" method="get">
+    <div class="form-group">
+        <label>Введите номер транзакции</label>
+        <input type="text" name="transaction_id" required>
+    </div>
+    <button type="submit">Найти</button>
 </form>
-<form action="http://127.0.0.1:8000/main_page">
+<div class="nav-buttons">
+<form action="/main_page">
     <input type="submit" value="Назад">
 </form>
+</div>
+</div>
 </body>
 </html>

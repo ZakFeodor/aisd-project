@@ -1,25 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Smooth Sort</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+<div class="container">
 <h1>Smooth Sort</h1>
 {% if result %}
-    <p style="color: blue">{{ result }}</p>
+    <div class="result-box">Результат: {{ result }}</div>
 {% endif %}
-<h2>Введите 5 чисел, формирующих массив для сортировки</h2>
-<form action="http://127.0.0.1:8000/main_page/smoothsort/get_result" method="post">
-    <input type="number" name="numbers" required>
-    <input type="number" name="numbers" required>
-    <input type="number" name="numbers" required>
-    <input type="number" name="numbers" required>
-    <input type="number" name="numbers" required>
-    <button type="submit">Отправить</button>
+<h2>Введите числа для сортировки</h2>
+<form action="/main_page/smoothsort/get_result" method="post">
+    <div class="form-group">
+        <input type="number" name="numbers" required>
+        <input type="number" name="numbers" required>
+        <input type="number" name="numbers" required>
+        <input type="number" name="numbers" required>
+        <input type="number" name="numbers" required>
+    </div>
+    <button type="submit">Отсортировать</button>
 </form>
-<form action="http://127.0.0.1:8000/main_page">
+<div class="nav-buttons">
+<form action="/main_page">
     <input type="submit" value="Назад">
 </form>
+</div>
+</div>
 </body>
 </html>

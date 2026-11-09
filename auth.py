@@ -5,12 +5,12 @@ from fastapi import Request
 from model import User, engine, SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy import select
+from cache import get_obj_by_login, save_obj_by_login, del_obj_by_login
 
 def get_session():
     with SessionLocal() as session:
         yield session
 
-SESSIONS = {}
 
 def require_user(request: Request):
     user = get_current_user(request)
@@ -37,11 +37,11 @@ def get_current_user(request: Request):
     session_id = request.cookies.get('session_id')
     if not session_id:
         return None
-    return SESSIONS.get(session_id)
+    return get_obj_by_login("sessions",  session_id)
 
 def create_session(response: Response, login: str):
     session_id = secrets.token_hex(16)
-    SESSIONS[session_id] = login
+    save_obj_by_login("sessions", session_id, login)
     response.set_cookie("session_id", session_id)
     return session_id
 
@@ -59,5 +59,5 @@ def logout_user(response: Response, request: Request, session: Session):
         session.commit()
     session_id = request.cookies.get('session_id')
     if session_id is not None:
-        SESSIONS.pop(session_id, None)
+        del_obj_by_login("sessions", session_id)
     response.delete_cookie("session_id")

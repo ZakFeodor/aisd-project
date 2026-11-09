@@ -1,34 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Главная</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+<div class="container">
 <h1>Добро пожаловать</h1>
 {% if error %}
-    <p style="color: red">{{ error }}</p>
+    <p class="error-message">{{ error }}</p>
 {% endif %}
-<form action="http://127.0.0.1:8000/main_page/upload" method="post" enctype="multipart/form-data">
-    <input type="file" name="file">
+<form action="/main_page/upload" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <input type="file" name="file">
+    </div>
     <button type="submit">Отправить файл</button>
 </form>
-<form action="http://127.0.0.1:8000/main_page/get_hashmap">
+<div class="nav-buttons">
+<form action="/main_page/get_hashmap">
     <button type="submit">Получить информацию по HashMap</button>
 </form>
-<form action="http://127.0.0.1:8000/main_page/get_segment_tree">
-    <button type="submit">Получить информацию по Segment_tree</button>
+<form action="/main_page/get_segment_tree">
+    <button type="submit">Получить информацию по Segment Tree</button>
 </form>
-</form>
-<form action="http://127.0.0.1:8000/main_page/PageRank">
+<form action="/main_page/PageRank">
     <button type="submit">Получить информацию по PageRank</button>
 </form>
+<form action="/main_page/smoothsort">
+    <button type="submit">Получить информацию по Smooth Sort</button>
 </form>
-<form action="http://127.0.0.1:8000/main_page/smoothsort">
-    <button type="submit">Получить информацию по Leonardo Heap</button>
+<form action="/">
+    <button type="submit" class="btn-secondary">Выйти из аккаунта</button>
 </form>
-<form action="http://127.0.0.1:8000/">
-    <button type="submit">Выйти из аккаунта</button>
-</form>
+</div>
+</div>
 </body>
 </html>

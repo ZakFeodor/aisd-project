@@ -2,20 +2,29 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Вход</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+<div class="container">
 {% if error %}
-    <p style="color: red">{{ error }}</p>
+    <p class="error-message">{{ error }}</p>
 {% endif %}
 <h1>Введите логин и пароль для входа или зарегистрируйтесь</h1>
-<form action="http://127.0.0.1:8000/auth_check" method="post">
-    <label>Логин</label><input type="text" name="login" required>
-    <label>Пароль</label><input type="password" name="password" required>
+<form action="/auth_check" method="post">
+    <div class="form-group">
+        <label>Логин</label>
+        <input type="text" name="login" required>
+        <label>Пароль</label>
+        <input type="password" name="password" required>
+    </div>
     <button type="submit">Войти</button>
 </form>
-<form action="http://127.0.0.1:8000/register">
+<div class="nav-buttons">
+<form action="/register">
     <input type="submit" value="Регистрация">
 </form>
+</div>
+</div>
 </body>
 </html>

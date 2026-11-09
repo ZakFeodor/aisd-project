@@ -1,22 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Segment Tree</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-{% if result %}
-    <p style="color: blue">{{ result }}</p>
-{% endif %}
+<div class="container">
 <h1>Segment Tree</h1>
-<h2>Пример на массиве [1, 5, 3, 9, 11, 6]</h2>
-<form action="/main_page/get_segment_tree/get_result/{{ left }}/{{ right }}" method="get">
-    <label>Левая граница суммы</label><input type="number" name="left" required>
-    <label>Правая граница суммы</label><input type="number" name="right" required>
-    <button type="submit">Отправить</button>
+{% if result %}
+    <div class="result-box">Результат: {{ result }}</div>
+{% endif %}
+<h2>Введите массив (через запятую) или используйте по умолчанию</h2>
+<form action="/main_page/get_segment_tree" method="post">
+    <div class="form-group">
+        <input type="text" name="array_input" placeholder="Например: 2, 8, 1, 7, 3">
+    </div>
+    <button type="submit">Применить массив</button>
 </form>
-<form action="http://127.0.0.1:8000/main_page">
+{% if array %}
+<div class="array-display">Массив: {{ array }}</div>
+{% endif %}
+<form action="/main_page/get_segment_tree/get_result" method="get">
+    <div class="form-group">
+        <label>Левая граница суммы</label>
+        <input type="number" name="left" required>
+        <label>Правая граница суммы</label>
+        <input type="number" name="right" required>
+    </div>
+    <button type="submit">Вычислить сумму</button>
+</form>
+<div class="nav-buttons">
+<form action="/main_page">
     <input type="submit" value="Назад">
 </form>
+</div>
+</div>
 </body>
 </html>

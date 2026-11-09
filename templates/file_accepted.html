@@ -1,16 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Загрузка файла</title>
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-<form action="http://127.0.0.1:8000/main_page/{name}/upload" method="post" enctype="multipart/form-data">
-    <input type="file" name="file">
+<div class="container">
+<h1>Загрузка файла</h1>
+<form action="/main_page/{{ name }}/upload" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <input type="file" name="file">
+    </div>
     <button type="submit">Загрузить</button>
 </form>
-<form action="http://127.0.0.1:8000/">
-    <button type="submit">Выйти из аккаунта</button>
+<div class="nav-buttons">
+<form action="/">
+    <button type="submit" class="btn-secondary">Выйти из аккаунта</button>
 </form>
+</div>
+</div>
 </body>
 </html>
