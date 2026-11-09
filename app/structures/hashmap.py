@@ -80,6 +80,8 @@ def get_row(file_path, transaction_id, hashmap):
     return df.iloc[row_number].to_dict()
 
 if __name__ == '__main__':
-    row = get_row(f"uploads/admin/Retail_Transactions_Dataset.csv", int(1000000028))
+    from pathlib import Path
+    base = Path(__file__).resolve().parent.parent.parent
+    row = get_row(str(base / "uploads" / "admin" / "Retail_Transactions_Dataset.csv"), int(1000000028))
     print(row)
 

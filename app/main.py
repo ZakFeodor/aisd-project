@@ -1,23 +1,25 @@
 from fastapi import FastAPI, Request, Depends, UploadFile, Form, File
 from fastapi.staticfiles import StaticFiles
-import os
+from pathlib import Path
 from typing import Annotated
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from typing import List
-from auth import check_credentials, login_user, get_session, logout_user, check_password, require_user, Session, create_session
-from hashmap import get_row, build_hash_index
-from segment_tree import SegmentTree
-from pagerank import pagerank
-from smoothsort import smooth_sort
+from app.auth import check_credentials, login_user, get_session, check_password, require_user, Session, create_session
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+from app.structures import get_row, build_hash_index
+from app.structures import SegmentTree
+from app.structures import pagerank
+from app.structures import smooth_sort
 
 HASHCACHE = {}
 STCACHE = {}
 DEFAULT_ARRAY = [1, 5, 3, 9, 11, 6]
 
 app = FastAPI()
-templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -77,9 +79,9 @@ def upload_file(request: Request, file: UploadFile = File(...)):
     user = require_user(request)
     if isinstance(user, RedirectResponse):
         return user
-    user_dir = os.path.join("uploads", user)
-    os.makedirs(user_dir, exist_ok=True)
-    file_path = os.path.join(user_dir, file.filename)
+    user_dir = BASE_DIR / "uploads" / user
+    user_dir.mkdir(parents=True, exist_ok=True)
+    file_path = user_dir / file.filename
     with open(file_path, "wb") as f:
         f.write(file.file.read())
 
@@ -90,7 +92,7 @@ def hashmap_result(request: Request, transaction_id: str | None = None):
     user = require_user(request)
     if isinstance(user, RedirectResponse):
         return user
-    row = get_row(f"uploads/{user}/Retail_Transactions_Dataset.csv", int(transaction_id), HASHCACHE.get(user, None))
+    row = get_row(str(BASE_DIR / "uploads" / user / "Retail_Transactions_Dataset.csv"), int(transaction_id), HASHCACHE.get(user, None))
     if row is None:
         return RedirectResponse(url=f"/main_page?error=Запрашиваемая транзакция не найдена", status_code=303)
     return templates.TemplateResponse(
@@ -102,8 +104,9 @@ def hashmap_result(request: Request, transaction_id: str | None = None):
 @app.get("/main_page/get_hashmap", response_class=HTMLResponse)
 def hashmap(request: Request):
     user = require_user(request)
-    if os.path.exists(f"uploads/{user}/Retail_Transactions_Dataset.csv"):
-        hashmap = build_hash_index(f"uploads/{user}/Retail_Transactions_Dataset.csv")
+    file_path = BASE_DIR / "uploads" / user / "Retail_Transactions_Dataset.csv"
+    if file_path.exists():
+        hashmap = build_hash_index(str(file_path))
         HASHCACHE[user] = hashmap
         return templates.TemplateResponse(
             request=request,

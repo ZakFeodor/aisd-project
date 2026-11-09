@@ -2,10 +2,10 @@ import secrets
 import hashlib
 from fastapi.responses import Response, RedirectResponse
 from fastapi import Request
-from model import User, engine, SessionLocal
+from app.db.model import User, SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-from cache import get_obj_by_login, save_obj_by_login, del_obj_by_login
+from app.db.cache import get_obj_by_login, save_obj_by_login, del_obj_by_login
 
 def get_session():
     with SessionLocal() as session:
