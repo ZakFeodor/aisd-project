@@ -9,7 +9,7 @@ from app.auth import check_credentials, login_user, get_session, check_password,
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 from app.structures import get_row, build_hash_index
-from app.structures import SegmentTree
+from app.structures import SegmentTree, build_segment_tree_from_csv
 from app.structures import pagerank
 from app.structures import smooth_sort
 
@@ -127,10 +127,36 @@ def segment_tree_result(request: Request, left: int = 0, right: int = 0):
 
     result = tree.query(left, right)
 
+    if hasattr(tree, '_from_csv'):
+        return templates.TemplateResponse(
+            request=request,
+            name='segmenttree.html',
+            context={"result": result, "csv_file": "Retail_Transactions_Dataset.csv", "size": tree.n}
+        )
+
     return templates.TemplateResponse(
         request=request,
         name='segmenttree.html',
         context={"result": result, "array": tree.array}
+    )
+
+
+@app.post("/main_page/get_segment_tree/upload")
+def segment_tree_upload(request: Request, file: UploadFile = File(...)):
+    user = require_user(request)
+    if isinstance(user, RedirectResponse):
+        return user
+    user_dir = BASE_DIR / "uploads" / user
+    user_dir.mkdir(parents=True, exist_ok=True)
+    file_path = user_dir / file.filename
+    with open(file_path, "wb") as f:
+        f.write(file.file.read())
+    tree = build_segment_tree_from_csv(str(file_path))
+    STCACHE[user] = tree
+    return templates.TemplateResponse(
+        request=request,
+        name='segmenttree.html',
+        context={"csv_file": file.filename, "size": tree.n}
     )
 
 
@@ -142,8 +168,30 @@ def segment_tree_page(request: Request):
 
     tree = STCACHE.get(user)
     if tree is None:
-        tree = SegmentTree(DEFAULT_ARRAY)
-        STCACHE[user] = tree
+        file_path = BASE_DIR / "uploads" / user / "Retail_Transactions_Dataset.csv"
+        if file_path.exists():
+            tree = build_segment_tree_from_csv(str(file_path))
+            STCACHE[user] = tree
+            return templates.TemplateResponse(
+                request=request,
+                name='segmenttree.html',
+                context={"csv_file": "Retail_Transactions_Dataset.csv", "size": tree.n}
+            )
+        else:
+            tree = SegmentTree(DEFAULT_ARRAY)
+            STCACHE[user] = tree
+            return templates.TemplateResponse(
+                request=request,
+                name='segmenttree.html',
+                context={"array": DEFAULT_ARRAY}
+            )
+
+    if hasattr(tree, '_from_csv'):
+        return templates.TemplateResponse(
+            request=request,
+            name='segmenttree.html',
+            context={"csv_file": "Retail_Transactions_Dataset.csv", "size": tree.n}
+        )
 
     return templates.TemplateResponse(
         request=request,

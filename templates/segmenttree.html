@@ -11,6 +11,13 @@
 {% if result %}
     <div class="result-box">Результат: {{ result }}</div>
 {% endif %}
+<h2>Загрузите файл Retail_Transactions_Dataset.csv</h2>
+<form action="/main_page/get_segment_tree/upload" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <input type="file" name="file" required>
+    </div>
+    <button type="submit">Загрузить файл</button>
+</form>
 <h2>Введите массив (через запятую) или используйте по умолчанию</h2>
 <form action="/main_page/get_segment_tree" method="post">
     <div class="form-group">
@@ -18,7 +25,13 @@
     </div>
     <button type="submit">Применить массив</button>
 </form>
-{% if array %}
+{% if csv_file %}
+<div class="array-display">Файл: {{ csv_file }}</div>
+{% endif %}
+{% if size %}
+<div class="array-display">Размер: {{ size }} элементов</div>
+{% endif %}
+{% if array and not csv_file %}
 <div class="array-display">Массив: {{ array }}</div>
 {% endif %}
 <form action="/main_page/get_segment_tree/get_result" method="get">

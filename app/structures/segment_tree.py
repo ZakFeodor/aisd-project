@@ -1,3 +1,6 @@
+import pandas as pd
+
+
 class SegmentTree:
     def __init__(self, a):
         self.n = len(a)
@@ -43,4 +46,12 @@ class SegmentTree:
           else:
             self.tree[v] = self._update(2*v, tl, (tl+tr)//2, pos, value) + self._update(2*v+1, (tl+tr)//2+1, tr, pos, value)
         return self.tree[v]
+
+
+def build_segment_tree_from_csv(csv_path):
+    df = pd.read_csv(csv_path)
+    values = df['Total_Cost'].tolist()
+    tree = SegmentTree(values)
+    tree._from_csv = True
+    return tree
 
